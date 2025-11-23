@@ -11,38 +11,12 @@ p {
     margin-left: 150px;
     margin-right: 150px;
     margin-bottom: 20px;
+    font-size: 18px;
     overflow-y: auto;
     text-align: center;
     font-family: 'Lato', sans-serif;
   }
 
-.list-container {
-    text-align: center;
-}
-
-.list-container ul {
-  display: inline-block;
-  text-align: left;
-  font-family: 'Lato', sans-serif;
-  color: #000000;
-}
-
-.list-container h5 {
-    margin-top: 40px;
-    margin-bottom: 10px;
-    text-align: left;
-    font-family: 'Lato', sans-serif;
-    color: #000000;
-}
-
 body {
   background-color: var(--dl-color-gray-white100);
-}
-
-py-script {
-  display: block;
-  margin-top: 20px;
-  overflow-y: auto;
-  text-align: center;
-  font-family: 'Lato', sans-serif;
 }
