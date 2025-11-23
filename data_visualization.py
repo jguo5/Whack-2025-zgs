@@ -16,7 +16,10 @@ df = pd.read_csv(DATA_CSV, low_memory=False)
 df.columns = df.columns.str.strip()
 
 # Ensure FIPS codes are strings with leading zeros
-df["county_fips"] = df["county_fips"].fillna('00000').astype(str).str.zfill(5)
+df["county_fips"] = pd.to_numeric(df["county_fips"], errors="coerce").astype('Int64').astype(str).str.zfill(5)
+
+# Ensure FIPS codes are strings with leading zeros
+df["county_fips"] = df["county_fips"].astype(str).str.zfill(5)
 
 # Avoid NAs
 num_cols = ["happening","candidatevotes","totalvotes","risk_score","resl_score"]
@@ -42,14 +45,13 @@ elec["candidatevotes"] = pd.to_numeric(elec["candidatevotes"], errors="coerce").
 elec["totalvotes"] = pd.to_numeric(elec["totalvotes"], errors="coerce").replace(0, pd.NA)
 elec = elec[elec["totalvotes"].notna()]
 
-elec["vote_pct"] = elec["candidatevotes"] / elec["totalvotes"]
+elec["vote_pct"] = elec["candidatevotes"] / elec["totalvotes"] # *100
 
 party_share = (
     elec.groupby(["county_fips","party"])["vote_pct"]
     .sum()
     .reset_index()
 )
-
 party_pivot = party_share.pivot(index="county_fips", columns="party", values="vote_pct").reset_index()
 party_pivot = party_pivot.fillna(0)
 
@@ -119,45 +121,84 @@ data = merged[merged['county_fips'].isin(df[df['state']==selected_state]['county
 # -----------------------------
 counties = gpd.read_file("cb_2018_us_county_5m.geojson")
 
-# Merge on COUNTYFP (ensure string)
-counties["COUNTYFP"] = counties["COUNTYFP"].astype(str).str.zfill(5)
-gdf = counties.merge(data, left_on='COUNTYFP', right_on='county_fips', how='left')
+# 1. Ensure STATEFP and COUNTYFP are zero-padded
+counties["STATEFP"] = counties["STATEFP"].astype(str).str.zfill(2)
+counties["COUNTYFP"] = counties["COUNTYFP"].astype(str).str.zfill(3)
 
-# Remove rows with empty geometries
-gdf = gdf[~gdf.geometry.isna()]
+# 2. CREATE the correct 5-digit FIPS code
+counties["GEOID"] = counties["STATEFP"] + counties["COUNTYFP"]
+
+# 3. Merge on the 5-digit GEOID
+gdf = counties.merge(data, left_on='GEOID', right_on='county_fips', how='left')
 
 # Convert to GeoJSON for Plotly
-geojson_data = json.loads(gdf.to_json())
+#geojson_data = json.loads(gdf.to_json())
 
 # -----------------------------
 # 8. Choropleth map
 # -----------------------------
-st.subheader("US Counties by Enhanced NeedScore")
-gdf['hover_text'] = (
-    "County: " + gdf['NAME'] +
+
+st.subheader(f"Counties in {selected_state} by Enhanced NeedScore")
+
+# We must ensure 'data' is not empty before proceeding
+if data.empty:
+    st.warning(f"No county data available in the 'data' DataFrame for {selected_state}. Cannot generate map.")
+    st.stop()
+
+# 1. Get the State FIPS for filtering the GeoDataFrame (gdf)
+selected_state_fips = data['county_fips'].iloc[0][:2]
+
+# 2. Filter the merged GeoDataFrame (gdf) to only include the polygons of the selected state
+gdf_filtered = gdf[gdf['STATEFP'] == selected_state_fips].copy() 
+
+# 3. Final check to see if we have valid data for the map color
+# The previous warning was here, and it's still useful.
+if gdf_filtered['EnhancedNeedScore'].isnull().all():
+    # This warning/error is now appropriate if the merge failed for this state
+    st.warning(f"Map data is missing for {selected_state}. The merge failed (check FIPS data types/padding) or data is missing from the CSV.")
+    st.stop()
+
+# Recreate the hover text for the filtered data
+gdf_filtered['hover_text'] = (
+    "County: " + gdf_filtered['NAME'] +
     "<br>State: " + selected_state +
-    "<br>Actual Risk: " + gdf['TotalRiskScore'].astype(str) +
-    "<br>Perceived Risk: " + gdf['PerceivedRisk'].astype(str) +
-    "<br>Risk Gap: " + gdf['RiskGap'].round(2).astype(str) +
-    "<br>Resilience Score: " + gdf['ResilienceScore'].round(2).astype(str) +
-    "<br>Dem Vote %: " + gdf['DemVotePct'].round(1).astype(str) +
-    "<br>Rep Vote %: " + gdf['RepVotePct'].round(1).astype(str) +
-    "<br>Enhanced NeedScore: " + gdf['EnhancedNeedScore'].round(2).astype(str)
+    "<br>Actual Risk: " + gdf_filtered['TotalRiskScore'].astype(str) +
+    "<br>Perceived Risk: " + gdf_filtered['PerceivedRisk'].astype(str) +
+    "<br>Risk Gap: " + gdf_filtered['RiskGap'].round(2).astype(str) +
+    "<br>Resilience Score: " + gdf_filtered['ResilienceScore'].round(2).astype(str) +
+    "<br>Dem Vote %: " + gdf_filtered['DemVotePct'].round(1).astype(str) +
+    "<br>Rep Vote %: " + gdf_filtered['RepVotePct'].round(1).astype(str) +
+    "<br>Enhanced NeedScore: " + gdf_filtered['EnhancedNeedScore'].round(2).astype(str)
 )
 
-fig_map = px.choropleth_mapbox(
-    gdf,
+geojson_data = json.loads(gdf_filtered.to_json())
+
+fig_map = px.choropleth(
+    gdf_filtered,
     geojson=geojson_data,
-    locations='county_fips',
-    featureidkey="properties.county_fips",
+    locations=gdf_filtered.index,
     color='EnhancedNeedScore',
     hover_name='hover_text',
     color_continuous_scale='Reds',
-    mapbox_style="carto-positron",
-    zoom=3,
-    center={"lat": 37.0902, "lon": -95.7129}
+    projection="mercator"
 )
+
+fig_map = px.choropleth(
+    gdf_filtered,
+    geojson=gdf_filtered.geometry,
+    locations=gdf_filtered.index,
+    color='EnhancedNeedScore',
+    hover_name='hover_text',
+    color_continuous_scale='Reds',
+    projection="mercator"
+)
+
+fig_map.update_geos(fitbounds="locations", visible=False)
+fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
 st.plotly_chart(fig_map, use_container_width=True)
+
+
 
 # -----------------------------
 # 9. Scatterplot: RiskGap vs Political Affiliation
