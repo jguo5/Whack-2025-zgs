@@ -98,6 +98,21 @@ write_csv(totalPerceptionIndexPolitical, file = csv_file_path)
 
 print(paste("Saved csv file to:", csv_file_path))
 
+#------------------data visualization
 
+visualData <- totalPerceptionIndexPolitical %>%
+  select(
+    county_fips,
+    happening,
+    party,
+    candidatevotes,
+    totalvotes,
+    risk_score,
+    resl_score,
+    state
+  )
+csv_file_path4 <- "C:/Users/iwuba/Downloads/WHACK2025/visual_data.csv"
+write_csv(visualData, file = csv_file_path4) 
+print(paste("Saved csv file to:", csv_file_path4))
 
 
