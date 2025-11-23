@@ -1,0 +1,57 @@
+/* ======================================= */
+/* Map Sections Styling - Matches Theme    */
+/* ======================================= */
+
+/* Section headers */
+h2.section-title {
+  margin-top: var(--section-spacing);
+  text-align: center;
+  font-weight: 900;
+  color: var(--primary-red);
+  letter-spacing: 1px;
+}
+
+h3.section-subtitle {
+  margin-top: 40px;
+  font-weight: 700;
+  color: var(--black);
+  text-align: center;
+}
+
+/* Paragraphs */
+p.section-text {
+  max-width: 900px;
+  margin: 20px auto;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--gray-mid);
+  text-align: center;
+}
+
+/* Lists inside sections */
+ul.section-list, ol.section-list {
+  max-width: 800px;
+  margin: 20px auto;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--gray-mid);
+  text-align: left;
+  padding-left: 20px;
+}
+
+/* Highlighted terms */
+strong.highlight {
+  color: var(--primary-red-dark);
+}
+
+/* Fade-in animation (re-use your existing fade-in logic) */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

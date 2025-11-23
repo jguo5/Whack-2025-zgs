@@ -1,0 +1,41 @@
+.list-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 30px;
+}
+
+.list-container p {
+  color: var(--gray-mid);
+}
+
+/* Resource cards */
+.resource-card {
+  background: var(--white);
+  padding: 25px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 30px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 6px solid var(--primary-red);
+}
+
+.resource-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.resource-card a {
+  color: var(--primary-red);
+  font-weight: 700;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.resource-card a:hover {
+  color: var(--primary-red-dark);
+  text-decoration: underline;
+}
+
+.resource-card p {
+  margin-top: 10px;
+}
