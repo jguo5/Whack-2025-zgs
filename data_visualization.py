@@ -117,7 +117,6 @@ data = merged[merged['county_fips'].isin(df[df['state']==selected_state]['county
 # 7. Load US county shapefile
 # -----------------------------
 # Save as GeoJSON in the same folder
-gdf.to_file("cb_2018_us_county_5m.geojson", driver="GeoJSON")
 counties = gpd.read_file("cb_2018_us_county_5m.geojson")
 
 # Merge on COUNTYFP (ensure string)
