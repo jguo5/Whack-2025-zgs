@@ -10,7 +10,7 @@ st.title("US Counties in Most Need: Climate Risk, Perception & Resilience")
 # -----------------------------
 # 1. Load main dataset (includes FEMA fields)
 # -----------------------------
-DATA_CSV = "total_perception_index_political_dataset.csv"
+DATA_CSV = "visual_data.csv"
 df = pd.read_csv(DATA_CSV, low_memory=False)
 df.columns = df.columns.str.strip()
 
