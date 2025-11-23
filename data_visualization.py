@@ -90,6 +90,19 @@ merged["RiskGap"] = merged["TotalRiskScore"] - merged["PerceivedRisk"]
 # Streamlit sliders for political & resilience weighting
 st.sidebar.header("Filters & Settings")
 
+weight = st.sidebar.slider(
+    "Political Weighting: 0 = Dem, 1 = Rep",
+    min_value=0.0, max_value=1.0, value=1.0, step=0.01
+)
+res_weight = st.sidebar.slider(
+    "Resilience Weighting: 0 = ignore, 1 = full effect",
+    min_value=0.0, max_value=1.0, value=1.0, step=0.01
+)
+
+merged["WeightedPolitical"] = (
+    weight * merged["RepVotePct"] + (1-weight) * merged["DemVotePct"]
+) / 100
+
 # Normalize resilience factor (0-1, inverted: low resilience → higher need)
 merged["ResilienceFactor"] = 1 - (merged["ResilienceScore"] / merged["ResilienceScore"].max())
 
