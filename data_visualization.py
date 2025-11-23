@@ -15,7 +15,12 @@ df = pd.read_csv(DATA_CSV, low_memory=False)
 df.columns = df.columns.str.strip()
 
 # Ensure FIPS codes are strings with leading zeros
-df["county_fips"] = df["county_fips"].astype(str).str.zfill(5)
+df["county_fips"] = df["county_fips"].fillna('00000').astype(str).str.zfill(5)
+
+#Avoid NAs
+num_cols = ["happening","candidatevotes","totalvotes","risk_score","resl_score"]
+for col in num_cols:
+    df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
 # -----------------------------
 # 2. Perceived Risk
@@ -113,7 +118,7 @@ data = merged[merged['county_fips'].isin(df[df['state']==selected_state]['county
 # -----------------------------
 counties = gpd.read_file("cb_2018_us_county_5m.shp")
 # Merge on COUNTYFP (ensure string)
-counties["COUNTYFP"] = counties["COUNTYFP"].astype(str).str.zfill(3)
+counties["COUNTYFP"] = counties["COUNTYFP"].astype(str).str.zfill(5)
 gdf = counties.merge(data, left_on='COUNTYFP', right_on='county_fips', how='left')
 
 # -----------------------------
